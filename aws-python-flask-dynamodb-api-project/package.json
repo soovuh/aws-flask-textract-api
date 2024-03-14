@@ -1,0 +1,14 @@
+{
+  "name": "aws-python-flask-dynamodb-api-project",
+  "version": "1.0.0",
+  "description": "Example of a Python Flask API service backed by DynamoDB with traditional Serverless Framework",
+  "author": "",
+  "devDependencies": {
+    "serverless-python-requirements": "^6.0.0",
+    "serverless-wsgi": "^3.0.1"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.1576.0",
+    "serverless-plugin-existing-s3": "^2.4.0"
+  }
+}
