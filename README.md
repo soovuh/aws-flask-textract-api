@@ -1,4 +1,4 @@
-# Serverless Framework Python Flask API service backed by DynamoDB on AWS for text extraction
+# Flask API service on AWS for text extraction
 
 This API have 2 endpoints: 
 
