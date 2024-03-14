@@ -32,9 +32,9 @@ def is_valid_url(url):
     parsed_url = urlparse(url)
     return all([parsed_url.scheme, parsed_url.netloc])
 
-# Route for creating a file
+# Route for getting upload url
 @app.route('/files', methods=['POST'])
-def create_file():
+def get_upload_url():
     # Extract callback URL from request
     callback_url = request.json.get('callback_url')
     # Validate callback URL
@@ -64,9 +64,9 @@ def create_file():
     # Return file ID and upload URL
     return jsonify({'file_id': file_id, 'upload_url': upload_url}), 201
 
-# Route for retrieving a file
+# Route for retrieving textract result
 @app.route('/files/<string:file_id>')
-def get_file(file_id):
+def get_result(file_id):
     # Retrieve file metadata from DynamoDB
     file = dynamodb_client.get_item(
         TableName=TABLE_NAME, Key={'file_id': {'S': file_id}}
