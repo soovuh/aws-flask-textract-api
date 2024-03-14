@@ -1,0 +1,82 @@
+openapi: 3.0.0
+info:
+  title: Flask API with AWS Integration
+  description: |
+    This API allows users to upload files, trigger processing, and retrieve the processed data. It integrates with AWS services including DynamoDB, S3, and Textract.
+  version: 1.0.0
+servers:
+  # Added by API Auto Mocking Plugin
+  - url: https://moclnhdmz0.execute-api.us-east-1.amazonaws.com
+    description: Test Server
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/KLYMENKOILLIADEV/aws-flask-textract-api/1.0.0
+paths:
+  /files:
+    post:
+      summary: Accept callback_url and return upload_url
+      description: Accept callback_url for receiving callback when textract will be ended, and return upload_url for uploading files. Creates file_id and save it to dynamodb with callback_url
+      operationId: uploadFile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                callback_url:
+                  type: string
+                  format: uri
+      responses:
+        '201':
+          description: File uploaded successfully and processing triggered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  file_id:
+                    type: string
+                    format: uuid
+                  upload_url:
+                    type: string
+                    format: uri
+        '400':
+          description: Invalid request or missing callback URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /files/{file_id}:
+    get:
+      summary: Get processing result for a file
+      description: Retrieve the processed data associated with a file.
+      operationId: getFile
+      parameters:
+        - in: path
+          name: file_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: File details retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  file_id:
+                    type: string
+                    format: uuid
+                  text:
+                    type: array
+                    items:
+                      type: string
+                      format: text
+        '404':
+          description: File not found
