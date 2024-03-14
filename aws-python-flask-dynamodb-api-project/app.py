@@ -59,7 +59,7 @@ def create_file():
             HttpMethod='PUT',
         )
     except ClientError as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': str(e)}), 400
 
     # Return file ID and upload URL
     return jsonify({'file_id': file_id, 'upload_url': upload_url}), 201
@@ -88,19 +88,30 @@ def process_file(event, context):
     bucket = event['Records'][0]['s3']['bucket']['name']
     key = event['Records'][0]['s3']['object']['key']
 
+    result = dynamodb_client.get_item(
+        TableName=TABLE_NAME, Key={"file_id": {"S": key}}
+    ).get("Item")
+
     # Use Textract to detect text in the document
-    response = textract_client.detect_document_text(
-        Document={'S3Object': {'Bucket': bucket, 'Name': key}}
-    )
+    try:
+        response = textract_client.detect_document_text(
+            Document={'S3Object': {'Bucket': bucket, 'Name': key}}
+        )
+    except Exception as e:
+        http = urllib3.PoolManager()
+        callback_url = result.get('callback_url', {}).get('S', '').strip()
+        response = http.request(
+            'POST',
+            callback_url,
+            body=json.dumps({"file_id": key, 'error': 'Error with detecting text in document'}),
+            headers={"Content-Type": "application/json"},
+            retries=False
+        )
+        return jsonify({'error': str(e)}), 404
 
     # Extract text blocks from Textract response
     text_blocks = [block['Text'] for block in response['Blocks'] if block['BlockType'] == 'LINE']
     text_blocks_set = set(text_blocks)
-
-    # Retrieve callback URL from DynamoDB
-    result = dynamodb_client.get_item(
-        TableName=TABLE_NAME, Key={"file_id": {"S": key}}
-    ).get("Item")
 
     # Prepare item for DynamoDB update
     item = {
